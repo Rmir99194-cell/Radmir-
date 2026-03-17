@@ -128,17 +128,24 @@
         
         .search-input {
             width: 100%;
-            padding: 12px 15px;
-            border-radius: 25px;
+            padding: 15px 20px;
+            border-radius: 30px;
             border: none;
             background: rgba(255,255,255,0.1);
             color: white;
             font-size: 16px;
             backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
         
         .search-input::placeholder {
             color: rgba(255,255,255,0.5);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255,255,255,0.15);
         }
         
         .search-results {
@@ -146,49 +153,68 @@
             top: 100%;
             left: 0;
             right: 0;
-            background: rgba(20, 20, 30, 0.95);
-            border-radius: 15px;
-            margin-top: 5px;
-            max-height: 300px;
+            background: rgba(20, 20, 30, 0.98);
+            border-radius: 20px;
+            margin-top: 10px;
+            max-height: 400px;
             overflow-y: auto;
             display: none;
             z-index: 1000;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
         .search-item {
-            padding: 12px 15px;
+            padding: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.2s;
         }
         
         .search-item:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,107,107,0.2);
+        }
+        
+        .search-item:active {
+            transform: scale(0.98);
+        }
+        
+        .search-item-info {
+            flex: 1;
         }
         
         .search-item-info strong {
             font-size: 16px;
+            display: block;
+            margin-bottom: 4px;
         }
         
         .search-item-info small {
             color: rgba(255,255,255,0.6);
-            font-size: 12px;
+            font-size: 13px;
         }
         
         .search-add-btn {
             background: rgba(255,255,255,0.1);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
             cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
         }
         
         .search-add-btn:hover {
-            background: rgba(255,107,107,0.3);
+            background: #ff6b6b;
+            transform: scale(1.05);
+        }
+        
+        .search-add-btn:active {
+            transform: scale(0.95);
         }
         
         /* Вкладки */
@@ -206,6 +232,11 @@
             font-size: 16px;
             font-weight: 500;
             padding: 5px 0;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            color: rgba(255,255,255,0.8);
         }
         
         .tab.active {
@@ -227,7 +258,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 10px;
+            padding: 12px;
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
             cursor: pointer;
@@ -235,8 +266,12 @@
             backdrop-filter: blur(5px);
         }
         
-        .playlist-item:active {
+        .playlist-item:hover {
             background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        
+        .playlist-item:active {
             transform: scale(0.98);
         }
         
@@ -253,7 +288,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
         }
         
         .item-info {
@@ -262,17 +297,17 @@
         
         .item-info h4 {
             font-size: 16px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
         
         .item-info p {
-            font-size: 12px;
+            font-size: 13px;
             color: rgba(255,255,255,0.6);
         }
         
         .item-duration {
             color: rgba(255,255,255,0.4);
-            font-size: 12px;
+            font-size: 13px;
             padding-right: 10px;
         }
         
@@ -284,19 +319,33 @@
             padding: 15px;
             text-align: center;
             color: rgba(255,255,255,0.6);
-            margin-top: 10px;
+            margin: 10px 0;
             cursor: pointer;
             transition: all 0.3s;
         }
         
+        .add-btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #ff6b6b;
+        }
+        
         .add-btn:active {
-            background: rgba(255,255,255,0.2);
+            transform: scale(0.98);
         }
         
         .empty-message {
             text-align: center;
             padding: 30px;
             color: rgba(255,255,255,0.5);
+            font-size: 15px;
+        }
+        
+        /* Информация о количестве */
+        .results-count {
+            padding: 10px 15px;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -345,19 +394,13 @@
         <div class="tabs">
             <div class="tab active" onclick="showTab('playlist')">📋 Плейлист</div>
             <div class="tab" onclick="showTab('favorites')">❤️ Избранное</div>
-            <div class="tab" onclick="showTab('search')">🔍 Поиск</div>
         </div>
         
         <!-- Плейлист -->
         <div id="playlistView" class="playlist"></div>
         
         <!-- Избранное -->
-        <div id="favoritesView" class="playlist" style="display: none;">
-            <div class="add-btn" onclick="addCurrentToFavorites()">➕ Добавить текущий трек в избранное</div>
-        </div>
-        
-        <!-- Поиск (пустой, результаты будут в выпадающем списке) -->
-        <div id="searchView" style="display: none;"></div>
+        <div id="favoritesView" class="playlist" style="display: none;"></div>
     </div>
     
     <script>
@@ -365,77 +408,137 @@
         const tg = window.Telegram ? Telegram.WebApp : null;
         if (tg) tg.expand();
         
-        // Наша музыка
+        // ========== ВСЯ МУЗЫКА ==========
         const tracks = [
+            // Мияги
             { 
-                title: "Summer Vibes", 
-                artist: "Artist 1", 
+                id: 1,
+                title: "Тамада", 
+                artist: "Мияги & Эндшпиль", 
                 url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=🌊",
+                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=🎤",
                 duration: "3:45"
             },
             { 
-                title: "Night Drive", 
-                artist: "Artist 2", 
+                id: 2,
+                title: "I Got Love", 
+                artist: "Мияги & Эндшпиль", 
                 url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-                cover: "https://via.placeholder.com/200x200/ff8e8e/ffffff?text=🌙",
+                cover: "https://via.placeholder.com/200x200/ff8e8e/ffffff?text=❤️",
                 duration: "4:20"
             },
             { 
-                title: "Morning Coffee", 
-                artist: "Artist 3", 
+                id: 3,
+                title: "Самая", 
+                artist: "Мияги", 
                 url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-                cover: "https://via.placeholder.com/200x200/ffb6b6/ffffff?text=☕",
+                cover: "https://via.placeholder.com/200x200/ffb6b6/ffffff?text=🌟",
                 duration: "3:15"
             },
             { 
-                title: "Workout Mix", 
-                artist: "Artist 4", 
+                id: 4,
+                title: "Мама", 
+                artist: "Мияги & Эндшпиль", 
                 url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-                cover: "https://via.placeholder.com/200x200/ff9e9e/ffffff?text=💪",
+                cover: "https://via.placeholder.com/200x200/ff9e9e/ffffff?text=👩",
                 duration: "5:00"
             },
             { 
-                title: "Chill Evening", 
-                artist: "Artist 5", 
+                id: 5,
+                title: "Fire", 
+                artist: "Мияги", 
                 url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-                cover: "https://via.placeholder.com/200x200/ff7e7e/ffffff?text=😌",
+                cover: "https://via.placeholder.com/200x200/ff7e7e/ffffff?text=🔥",
+                duration: "4:45"
+            },
+            
+            // Макс Корж
+            { 
+                id: 6,
+                title: "Малиновый закат", 
+                artist: "Макс Корж", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=🌅",
+                duration: "3:45"
+            },
+            { 
+                id: 7,
+                title: "Слово пацана", 
+                artist: "Макс Корж", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                cover: "https://via.placeholder.com/200x200/ff8e8e/ffffff?text=💬",
+                duration: "4:20"
+            },
+            { 
+                id: 8,
+                title: "Жить в кайф", 
+                artist: "Макс Корж", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                cover: "https://via.placeholder.com/200x200/ffb6b6/ffffff?text=😎",
+                duration: "3:15"
+            },
+            
+            // Баста
+            { 
+                id: 9,
+                title: "Сансара", 
+                artist: "Баста", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                cover: "https://via.placeholder.com/200x200/ff9e9e/ffffff?text=🔄",
+                duration: "5:00"
+            },
+            { 
+                id: 10,
+                title: "Выпускной", 
+                artist: "Баста", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                cover: "https://via.placeholder.com/200x200/ff7e7e/ffffff?text=🎓",
+                duration: "4:45"
+            },
+            
+            // Скриптонит
+            { 
+                id: 11,
+                title: "Ламбада", 
+                artist: "Скриптонит", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=💃",
+                duration: "3:45"
+            },
+            { 
+                id: 12,
+                title: "Танцуй сама", 
+                artist: "Скриптонит", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                cover: "https://via.placeholder.com/200x200/ff8e8e/ffffff?text=👯",
+                duration: "4:20"
+            },
+            
+            // Другие популярные
+            { 
+                id: 13,
+                title: "Платина", 
+                artist: "Morgenshtern", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                cover: "https://via.placeholder.com/200x200/ffb6b6/ffffff?text=💎",
+                duration: "3:15"
+            },
+            { 
+                id: 14,
+                title: "Cadillac", 
+                artist: "Morgenshtern", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                cover: "https://via.placeholder.com/200x200/ff9e9e/ffffff?text=🚗",
+                duration: "5:00"
+            },
+            { 
+                id: 15,
+                title: "Skibidi", 
+                artist: "Little Big", 
+                url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                cover: "https://via.placeholder.com/200x200/ff7e7e/ffffff?text=🕺",
                 duration: "4:45"
             }
-        ];
-        
-        // База данных для поиска
-        const musicDatabase = [
-            { title: "Blinding Lights", artist: "The Weeknd", genre: "Pop" },
-            { title: "Shape of You", artist: "Ed Sheeran", genre: "Pop" },
-            { title: "Dance Monkey", artist: "Tones and I", genre: "Pop" },
-            { title: "Someone Like You", artist: "Adele", genre: "Pop" },
-            { title: "Rolling in the Deep", artist: "Adele", genre: "Pop" },
-            { title: "Bohemian Rhapsody", artist: "Queen", genre: "Rock" },
-            { title: "Sweet Child O' Mine", artist: "Guns N' Roses", genre: "Rock" },
-            { title: "Smells Like Teen Spirit", artist: "Nirvana", genre: "Rock" },
-            { title: "Hotel California", artist: "Eagles", genre: "Rock" },
-            { title: "Stairway to Heaven", artist: "Led Zeppelin", genre: "Rock" },
-            { title: "Despacito", artist: "Luis Fonsi", genre: "Latin" },
-            { title: "Havana", artist: "Camila Cabello", genre: "Pop" },
-            { title: "God's Plan", artist: "Drake", genre: "Hip-Hop" },
-            { title: "Sicko Mode", artist: "Travis Scott", genre: "Hip-Hop" },
-            { title: "Old Town Road", artist: "Lil Nas X", genre: "Country" },
-            { title: "Uptown Funk", artist: "Bruno Mars", genre: "Funk" },
-            { title: "Happy", artist: "Pharrell Williams", genre: "Pop" },
-            { title: "Sorry", artist: "Justin Bieber", genre: "Pop" },
-            { title: "Love Yourself", artist: "Justin Bieber", genre: "Pop" },
-            { title: "Perfect", artist: "Ed Sheeran", genre: "Pop" },
-            { title: "Thinking Out Loud", artist: "Ed Sheeran", genre: "Pop" },
-            { title: "All of Me", artist: "John Legend", genre: "R&B" },
-            { title: "Let Her Go", artist: "Passenger", genre: "Folk" },
-            { title: "Counting Stars", artist: "OneRepublic", genre: "Pop" },
-            { title: "Radioactive", artist: "Imagine Dragons", genre: "Rock" },
-            { title: "Believer", artist: "Imagine Dragons", genre: "Rock" },
-            { title: "Thunder", artist: "Imagine Dragons", genre: "Rock" },
-            { title: "Demons", artist: "Imagine Dragons", genre: "Rock" },
-            { title: "Whatever It Takes", artist: "Imagine Dragons", genre: "Rock" },
-            { title: "Natural", artist: "Imagine Dragons", genre: "Rock" }
         ];
         
         let currentTrack = 0;
@@ -450,20 +553,22 @@
             if (saved) favorites = JSON.parse(saved);
         } catch(e) {}
         
-        // Поиск
+        // ========== ПОИСК ==========
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         
         function searchMusic(query) {
-            if (!query || query.length < 2) {
+            if (!query || query.length < 1) {
                 searchResults.style.display = 'none';
                 return;
             }
             
-            query = query.toLowerCase();
-            const results = musicDatabase.filter(item => 
-                item.title.toLowerCase().includes(query) || 
-                item.artist.toLowerCase().includes(query)
+            query = query.toLowerCase().trim();
+            
+            // Ищем по всем трекам
+            const results = tracks.filter(track => 
+                track.title.toLowerCase().includes(query) || 
+                track.artist.toLowerCase().includes(query)
             );
             
             if (results.length === 0) {
@@ -472,15 +577,19 @@
                 return;
             }
             
-            let html = '';
-            results.slice(0, 10).forEach(item => {
+            let html = `<div class="results-count">Найдено ${results.length} треков</div>`;
+            
+            results.forEach(track => {
                 html += `
-                    <div class="search-item" onclick="selectSearchResult('${item.title.replace(/'/g, "\\'")}', '${item.artist.replace(/'/g, "\\'")}')">
+                    <div class="search-item" onclick="playTrackFromSearch(${track.id})">
                         <div class="search-item-info">
-                            <strong>${item.title}</strong><br>
-                            <small>${item.artist}</small>
+                            <strong>${track.title}</strong>
+                            <small>${track.artist}</small>
                         </div>
-                        <div class="search-add-btn" onclick="addToFavoritesFromSearch('${item.title.replace(/'/g, "\\'")}', '${item.artist.replace(/'/g, "\\'")}'); event.stopPropagation()">❤️ Добавить</div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="search-add-btn" onclick="addToFavoritesFromSearch(${track.id}); event.stopPropagation()">❤️</div>
+                            <div style="color: rgba(255,255,255,0.4); font-size: 13px;">${track.duration}</div>
+                        </div>
                     </div>
                 `;
             });
@@ -489,62 +598,44 @@
             searchResults.style.display = 'block';
         }
         
-        function selectSearchResult(title, artist) {
-            let foundIndex = -1;
-            for (let i = 0; i < tracks.length; i++) {
-                if (tracks[i].title.toLowerCase().includes(title.toLowerCase()) || 
-                    tracks[i].artist.toLowerCase().includes(artist.toLowerCase())) {
-                    foundIndex = i;
-                    break;
-                }
+        function playTrackFromSearch(trackId) {
+            const trackIndex = tracks.findIndex(t => t.id === trackId);
+            if (trackIndex !== -1) {
+                playTrack(trackIndex);
+                searchResults.style.display = 'none';
+                searchInput.value = '';
             }
-            
-            if (foundIndex !== -1) {
-                playTrack(foundIndex);
-            } else {
-                alert(`🎵 Сейчас играет: ${title} - ${artist}\n(Демо-версия)`);
-            }
-            
-            searchResults.style.display = 'none';
-            searchInput.value = '';
         }
         
-        function addToFavoritesFromSearch(title, artist) {
-            for (let i = 0; i < tracks.length; i++) {
-                if (tracks[i].title.toLowerCase().includes(title.toLowerCase())) {
-                    addToFavorites(i);
-                    searchResults.style.display = 'none';
-                    searchInput.value = '';
-                    return;
-                }
+        function addToFavoritesFromSearch(trackId) {
+            const trackIndex = tracks.findIndex(t => t.id === trackId);
+            if (trackIndex !== -1) {
+                addToFavorites(trackIndex);
+                searchResults.style.display = 'none';
+                searchInput.value = '';
             }
-            
-            const trackId = tracks.length;
-            tracks.push({
-                title: title,
-                artist: artist,
-                url: tracks[0].url,
-                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=🎵",
-                duration: "3:00"
-            });
-            
-            addToFavorites(trackId);
-            alert(`❤️ "${title}" добавлено в избранное!`);
-            searchResults.style.display = 'none';
-            searchInput.value = '';
         }
         
+        // Поиск при вводе
         searchInput.addEventListener('input', function(e) {
             searchMusic(e.target.value);
         });
         
+        // Поиск при нажатии Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMusic(e.target.value);
+            }
+        });
+        
+        // Закрыть поиск при клике вне
         document.addEventListener('click', function(e) {
             if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.style.display = 'none';
             }
         });
         
-        // Показать плейлист
+        // ========== ПЛЕЙЛИСТ ==========
         function showPlaylist() {
             const container = document.getElementById('playlistView');
             container.innerHTML = '';
@@ -553,7 +644,7 @@
                 const item = document.createElement('div');
                 item.className = 'playlist-item' + (index === currentTrack ? ' active' : '');
                 item.innerHTML = `
-                    <div class="item-cover">${track.cover ? '🎵' : '🎵'}</div>
+                    <div class="item-cover">🎵</div>
                     <div class="item-info">
                         <h4>${track.title}</h4>
                         <p>${track.artist}</p>
@@ -565,21 +656,19 @@
             });
         }
         
-        // Показать избранное
+        // ========== ИЗБРАННОЕ ==========
         function showFavorites() {
             const container = document.getElementById('favoritesView');
-            container.innerHTML = '<div class="add-btn" onclick="addCurrentToFavorites()">➕ Добавить текущий трек в избранное</div>';
             
             if (favorites.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'empty-message';
-                empty.innerText = '❤️ Нет избранных треков';
-                container.appendChild(empty);
+                container.innerHTML = '<div class="empty-message">❤️ Нет избранных треков</div>';
                 return;
             }
             
-            favorites.forEach((trackId, favIndex) => {
-                const track = tracks[trackId];
+            container.innerHTML = '';
+            
+            favorites.forEach((trackIndex, favIndex) => {
+                const track = tracks[trackIndex];
                 if (!track) return;
                 
                 const item = document.createElement('div');
@@ -592,12 +681,12 @@
                     </div>
                     <div class="item-duration" onclick="removeFromFavorites(${favIndex}); event.stopPropagation()">✖️</div>
                 `;
-                item.onclick = () => playTrack(trackId);
+                item.onclick = () => playTrack(trackIndex);
                 container.appendChild(item);
             });
         }
         
-        // Переключение вкладок
+        // ========== ВКЛАДКИ ==========
         function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.playlist').forEach(p => p.style.display = 'none');
@@ -611,34 +700,25 @@
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('favoritesView').style.display = 'flex';
                 showFavorites();
-            } else if (tab === 'search') {
-                document.querySelectorAll('.tab')[2].classList.add('active');
-                document.getElementById('playlistView').style.display = 'none';
-                document.getElementById('favoritesView').style.display = 'none';
-                
-                if (searchInput.value.length > 0) {
-                    searchMusic(searchInput.value);
-                } else {
-                    searchResults.innerHTML = '<div class="empty-message">🔍 Введите название песни или исполнителя</div>';
-                    searchResults.style.display = 'block';
-                }
             }
         }
         
-        // Добавить в избранное
-        function addToFavorites(trackId) {
-            if (!favorites.includes(trackId)) {
-                favorites.push(trackId);
+        // ========== ИЗБРАННОЕ ФУНКЦИИ ==========
+        function addToFavorites(trackIndex) {
+            if (!favorites.includes(trackIndex)) {
+                favorites.push(trackIndex);
                 localStorage.setItem('favorites', JSON.stringify(favorites));
-                alert('❤️ Добавлено в избранное!');
+                
+                // Показываем уведомление
+                const track = tracks[trackIndex];
+                alert(`❤️ "${track.title}" добавлено в избранное!`);
+                
                 if (document.querySelector('.tab.active').innerText.includes('❤️')) {
                     showFavorites();
                 }
+            } else {
+                alert('Эта песня уже в избранном');
             }
-        }
-        
-        function addCurrentToFavorites() {
-            addToFavorites(currentTrack);
         }
         
         function removeFromFavorites(index) {
@@ -647,7 +727,11 @@
             showFavorites();
         }
         
-        // Играть трек
+        function addCurrentToFavorites() {
+            addToFavorites(currentTrack);
+        }
+        
+        // ========== ПЛЕЕР ==========
         function playTrack(index) {
             currentTrack = index;
             const track = tracks[index];
@@ -664,7 +748,6 @@
             showPlaylist();
         }
         
-        // Play/Pause
         function playPause() {
             if (!audio.src) {
                 playTrack(0);
@@ -681,19 +764,17 @@
             isPlaying = !isPlaying;
         }
         
-        // Следующий трек
         function nextTrack() {
             let next = (currentTrack + 1) % tracks.length;
             playTrack(next);
         }
         
-        // Предыдущий трек
         function prevTrack() {
             let prev = (currentTrack - 1 + tracks.length) % tracks.length;
             playTrack(prev);
         }
         
-        // Перемотка
+        // ========== ПЕРЕМОТКА ==========
         function seekStart(event) {
             isDragging = true;
             seekUpdate(event);
