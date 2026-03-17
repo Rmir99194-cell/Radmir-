@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Music Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        .player {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .cover {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            background: #ddd;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+        .track-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .track-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .track-info p {
+            color: rgba(255,255,255,0.8);
+        }
+        .progress {
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .controls button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            color: #667eea;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .controls button.play {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+        }
+        .playlist {
+            margin-top: 20px;
+        }
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        .playlist-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .playlist-item.active {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="player">
+        <div class="cover">🎵</div>
+        
+        <div class="track-info">
+            <h2 id="trackTitle">Выберите трек</h2>
+            <p id="trackArtist">Нажмите на песню в плейлисте</p>
+        </div>
+        
+        <div class="progress">
+            <div id="progressBar" style="width: 0%; height: 100%; background: white; border-radius: 5px;"></div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="prevTrack()">⏮</button>
+            <button class="play" id="playBtn" onclick="playPause()">▶</button>
+            <button onclick="nextTrack()">⏭</button>
+        </div>
+        
+        <div class="playlist" id="playlist">
+            <!-- Список песен -->
+        </div>
+    </div>
+    
+    <script>
+        // Telegram Web App
+        const tg = window.Telegram ? Telegram.WebApp : null;
+        if (tg) tg.expand();
+        
+        // Наши песни (можешь заменить на свои)
+        const tracks = [
+            { title: "Песня 1", artist: "Исполнитель 1", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+            { title: "Песня 2", artist: "Исполнитель 2", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+            { title: "Песня 3", artist: "Исполнитель 3", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+            { title: "Песня 4", artist: "Исполнитель 4", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+            { title: "Песня 5", artist: "Исполнитель 5", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" }
+        ];
+        
+        let currentTrack = 0;
+        let isPlaying = false;
+        let audio = new Audio();
+        
+        // Показать список песен
+        function showPlaylist() {
+            const list = document.getElementById('playlist');
+            list.innerHTML = '';
+            
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item' + (index === currentTrack ? ' active' : '');
+                item.innerHTML = `
+                    <div>
+                        <strong>${track.title}</strong><br>
+                        <small>${track.artist}</small>
+                    </div>
+                    <div>▶</div>
+                `;
+                item.onclick = () => playTrack(index);
+                list.appendChild(item);
+            });
+        }
+        
+        // Играть трек
+        function playTrack(index) {
+            currentTrack = index;
+            const track = tracks[index];
+            
+            document.getElementById('trackTitle').textContent = track.title;
+            document.getElementById('trackArtist').textContent = track.artist;
+            
+            audio.src = track.url;
+            audio.play();
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸';
+            
+            showPlaylist(); // обновить выделение
+        }
+        
+        // Play/Pause
+        function playPause() {
+            if (!audio.src) {
+                playTrack(0);
+                return;
+            }
+            
+            if (isPlaying) {
+                audio.pause();
+                document.getElementById('playBtn').textContent = '▶';
+            } else {
+                audio.play();
+                document.getElementById('playBtn').textContent = '⏸';
+            }
+            isPlaying = !isPlaying;
+        }
+        
+        // Следующий трек
+        function nextTrack() {
+            let next = (currentTrack + 1) % tracks.length;
+            playTrack(next);
+        }
+        
+        // Предыдущий трек
+        function prevTrack() {
+            let prev = (currentTrack - 1 + tracks.length) % tracks.length;
+            playTrack(prev);
+        }
+        
+        // Прогресс бар
+        audio.ontimeupdate = function() {
+            if (audio.duration) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+            }
+        };
+        
+        // Следующий трек когда текущий закончился
+        audio.onended = function() {
+            nextTrack();
+        };
+        
+        // Показать плейлист при загрузке
+        showPlaylist();
+    </script>
+</body>
+</html>
