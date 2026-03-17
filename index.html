@@ -4,7 +4,6 @@
     <title>Music Player</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Весь твой старый CSS остается без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -138,6 +137,7 @@
         .search-input:focus {
             outline: none;
             border-color: #ff6b6b;
+            background: rgba(255,255,255,0.15);
         }
         
         .search-results {
@@ -171,6 +171,10 @@
             background: rgba(255,107,107,0.2);
         }
         
+        .search-item:active {
+            transform: scale(0.98);
+        }
+        
         .search-item-info {
             flex: 1;
         }
@@ -179,11 +183,28 @@
             font-size: 16px;
             display: block;
             margin-bottom: 4px;
+            color: white;
         }
         
         .search-item-info small {
             color: rgba(255,255,255,0.6);
             font-size: 13px;
+        }
+        
+        .search-add-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
+            color: #ff6b6b;
+        }
+        
+        .search-add-btn:hover {
+            background: #ff6b6b;
+            color: white;
         }
         
         .tabs {
@@ -200,6 +221,11 @@
             font-size: 16px;
             font-weight: 500;
             padding: 5px 0;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            color: rgba(255,255,255,0.8);
         }
         
         .tab.active {
@@ -225,11 +251,16 @@
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s;
+            backdrop-filter: blur(5px);
         }
         
         .playlist-item:hover {
             background: rgba(255,255,255,0.1);
             transform: translateX(5px);
+        }
+        
+        .playlist-item:active {
+            transform: scale(0.98);
         }
         
         .playlist-item.active {
@@ -255,6 +286,7 @@
         .item-info h4 {
             font-size: 16px;
             margin-bottom: 4px;
+            color: white;
         }
         
         .item-info p {
@@ -277,12 +309,23 @@
             color: rgba(255,255,255,0.6);
             margin: 10px 0;
             cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .add-btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #ff6b6b;
+        }
+        
+        .add-btn:active {
+            transform: scale(0.98);
         }
         
         .empty-message {
             text-align: center;
             padding: 30px;
             color: rgba(255,255,255,0.5);
+            font-size: 15px;
         }
         
         .results-count {
@@ -290,6 +333,12 @@
             color: rgba(255,255,255,0.5);
             font-size: 13px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #ff6b6b;
         }
     </style>
 </head>
@@ -346,72 +395,88 @@
         let currentTrack = null;
         let isPlaying = false;
         let audio = new Audio();
-        let playlist = [];
         let favorites = [];
         let isDragging = false;
         
+        // Загружаем избранное
         try {
             const saved = localStorage.getItem('favorites');
             if (saved) favorites = JSON.parse(saved);
         } catch(e) {}
         
-        // ========== НАСТОЯЩИЙ ПОИСК ЧЕРЕЗ YOUTUBE ==========
-        async function searchYouTube(query) {
-            try {
-                // Используем публичный API для поиска музыки
-                const response = await fetch(`https://youtube-search-api.com/search?q=${encodeURIComponent(query)} audio song&maxResults=15`);
-                const data = await response.json();
-                
-                return data.items
-                    .filter(item => item.type === 'video' && item.length?.simpleText)
-                    .map(item => ({
-                        id: item.id,
-                        title: item.title,
-                        artist: item.channelName || 'Unknown',
-                        duration: item.length?.simpleText || '3:00',
-                        thumbnail: item.thumbnail?.thumbnails?.slice(-1)[0]?.url || 'https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🎵',
-                        videoId: item.id
-                    }));
-            } catch (error) {
-                console.error('Search error:', error);
-                return getLocalResults(query);
-            }
-        }
-        
-        // Локальные результаты (если YouTube не работает)
-        function getLocalResults(query) {
-            const localSongs = [
-                { title: "Тамада", artist: "Мияги & Эндшпиль", duration: "3:45" },
-                { title: "I Got Love", artist: "Мияги & Эндшпиль", duration: "4:20" },
-                { title: "Самая", artist: "Мияги", duration: "3:15" },
-                { title: "Малиновый закат", artist: "Макс Корж", duration: "3:45" },
-                { title: "Сансара", artist: "Баста", duration: "5:00" },
-                { title: "Ламбада", artist: "Скриптонит", duration: "3:45" }
-            ];
+        // ========== БОЛЬШАЯ БАЗА РУССКОЙ МУЗЫКИ (запасной вариант) ==========
+        const russianMusicDB = [
+            // Мияги
+            { title: "Тамада", artist: "Мияги & Эндшпиль", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🎤" },
+            { title: "I Got Love", artist: "Мияги & Эндшпиль", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=❤️" },
+            { title: "Самая", artist: "Мияги", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🌟" },
+            { title: "Мама", artist: "Мияги & Эндшпиль", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=👩" },
+            { title: "Fire", artist: "Мияги", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🔥" },
+            { title: "Silence", artist: "Мияги & Эндшпиль", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🤫" },
+            { title: "Колибри", artist: "Мияги & Эндшпиль", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🐦" },
+            { title: "Дом", artist: "Мияги & Эндшпиль", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏠" },
             
-            return localSongs.filter(song => 
-                song.title.toLowerCase().includes(query.toLowerCase()) ||
-                song.artist.toLowerCase().includes(query.toLowerCase())
-            ).map(song => ({
-                ...song,
-                id: Math.random().toString(36).substr(2, 9),
-                videoId: null
-            }));
-        }
+            // Макс Корж
+            { title: "Малиновый закат", artist: "Макс Корж", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🌅" },
+            { title: "Слово пацана", artist: "Макс Корж", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=💬" },
+            { title: "Жить в кайф", artist: "Макс Корж", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=😎" },
+            { title: "Мотылек", artist: "Макс Корж", duration: "4:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🦋" },
+            { title: "Горы по колено", artist: "Макс Корж", duration: "3:50", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=⛰️" },
+            
+            // Баста
+            { title: "Сансара", artist: "Баста", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🔄" },
+            { title: "Выпускной", artist: "Баста", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🎓" },
+            { title: "Урбан", artist: "Баста", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏙️" },
+            { title: "Моя игра", artist: "Баста", duration: "5:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🎮" },
+            
+            // Скриптонит
+            { title: "Ламбада", artist: "Скриптонит", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=💃" },
+            { title: "Танцуй сама", artist: "Скриптонит", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=👯" },
+            { title: "Мультибрендовый", artist: "Скриптонит", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=💎" },
+            { title: "Притон", artist: "Скриптонит", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🏚️" },
+            
+            // Другие популярные
+            { title: "Платина", artist: "Morgenshtern", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=💎" },
+            { title: "Cadillac", artist: "Morgenshtern", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🚗" },
+            { title: "Skibidi", artist: "Little Big", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🕺" },
+            { title: "I'M OK", artist: "Little Big", duration: "3:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=✅" },
+            
+            // 9 Грамм
+            { title: "Плановая", artist: "9 Грамм", duration: "3:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=9️⃣" },
+            { title: "Дэнс", artist: "9 Грамм", duration: "2:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=💃" },
+            
+            // Jakone
+            { title: "Жиганская", artist: "Jakone", duration: "3:40", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🎸" },
+            { title: "Асфальт", artist: "Jakone", duration: "4:05", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🛣️" },
+            
+            // ANNA ASTI
+            { title: "Плачу на техно", artist: "ANNA ASTI", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=😢" },
+            { title: "Феникс", artist: "ANNA ASTI", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🔥" }
+        ];
         
-        // ========== ФУНКЦИИ ПОИСКА ==========
+        // Добавляем ID каждому треку
+        const tracks = russianMusicDB.map((track, index) => ({
+            ...track,
+            id: index + 1
+        }));
+        
+        // ========== ПОИСК ПО БАЗЕ ==========
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         
-        async function searchMusic(event) {
-            const query = event.target.value;
+        function searchMusic(event) {
+            const query = event.target.value.toLowerCase().trim();
             
-            if (query.length < 2) {
+            if (query.length < 1) {
                 searchResults.style.display = 'none';
                 return;
             }
             
-            const results = await searchYouTube(query);
+            // Ищем по всей базе
+            const results = tracks.filter(track => 
+                track.title.toLowerCase().includes(query) || 
+                track.artist.toLowerCase().includes(query)
+            );
             
             if (results.length === 0) {
                 searchResults.innerHTML = '<div class="empty-message">❌ Ничего не найдено</div>';
@@ -421,15 +486,19 @@
             
             let html = `<div class="results-count">Найдено ${results.length} треков</div>`;
             
-            results.forEach(track => {
+            results.slice(0, 15).forEach(track => {
+                const isFavorite = favorites.some(f => f.id === track.id);
                 html += `
-                    <div class="search-item" onclick="playSearchResult(${JSON.stringify(track).replace(/"/g, '&quot;')})">
+                    <div class="search-item" onclick="playTrack(${track.id})">
                         <div class="search-item-info">
                             <strong>${track.title}</strong>
                             <small>${track.artist}</small>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <div style="color: rgba(255,255,255,0.4);">${track.duration}</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: rgba(255,255,255,0.4);">${track.duration}</span>
+                            <span class="search-add-btn" onclick="toggleFavoriteFromSearch(event, ${track.id})" style="color: ${isFavorite ? '#ff6b6b' : 'white'}">
+                                ${isFavorite ? '❤️' : '🤍'}
+                            </span>
                         </div>
                     </div>
                 `;
@@ -439,10 +508,22 @@
             searchResults.style.display = 'block';
         }
         
-        function playSearchResult(track) {
-            playTrack(track);
-            searchResults.style.display = 'none';
-            searchInput.value = '';
+        function toggleFavoriteFromSearch(event, trackId) {
+            event.stopPropagation();
+            const track = tracks.find(t => t.id === trackId);
+            if (!track) return;
+            
+            const index = favorites.findIndex(f => f.id === trackId);
+            if (index === -1) {
+                favorites.push(track);
+                event.target.style.color = '#ff6b6b';
+                event.target.innerText = '❤️';
+            } else {
+                favorites.splice(index, 1);
+                event.target.style.color = 'white';
+                event.target.innerText = '🤍';
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
         }
         
         document.addEventListener('click', function(e) {
@@ -452,36 +533,29 @@
         });
         
         // ========== ПЛЕЕР ==========
-        function playTrack(track) {
+        function playTrack(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            if (!track) return;
+            
             currentTrack = track;
             
             document.getElementById('trackTitle').textContent = track.title;
             document.getElementById('trackArtist').textContent = track.artist;
-            document.getElementById('currentCover').src = track.thumbnail || 'https://via.placeholder.com/400x400/ff6b6b/ffffff?text=🎵';
+            document.getElementById('currentCover').src = track.cover;
             
-            // Используем YouTube если есть videoId
-            if (track.videoId) {
-                playYouTubeAudio(track.videoId);
-            } else {
-                // Тестовая музыка если нет видео
-                audio.src = `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${Math.floor(Math.random() * 5) + 1}.mp3`;
-                audio.play();
-            }
-            
+            audio.src = track.url;
+            audio.play();
             isPlaying = true;
             document.getElementById('playBtn').textContent = '⏸';
+            
+            searchResults.style.display = 'none';
+            searchInput.value = '';
             showPlaylist();
-        }
-        
-        function playYouTubeAudio(videoId) {
-            // Используем YouTube audio stream (через публичный сервис)
-            audio.src = `https://youtubemusic.com/stream/${videoId}`;
-            audio.play();
         }
         
         function togglePlay() {
             if (!currentTrack) {
-                alert('Сначала выберите трек');
+                alert('Сначала найдите и выберите трек');
                 return;
             }
             
@@ -496,37 +570,39 @@
         }
         
         function nextTrack() {
-            // Логика следующего трека
+            if (!currentTrack) return;
+            const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+            const nextIndex = (currentIndex + 1) % tracks.length;
+            playTrack(tracks[nextIndex].id);
         }
         
         function prevTrack() {
-            // Логика предыдущего трека
+            if (!currentTrack) return;
+            const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+            const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+            playTrack(tracks[prevIndex].id);
         }
         
         // ========== ПЛЕЙЛИСТ ==========
         function showPlaylist() {
             const container = document.getElementById('playlistView');
             
-            if (!playlist.length) {
-                container.innerHTML = '<div class="empty-message">📋 Плейлист пуст. Начните поиск!</div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            playlist.forEach((track, index) => {
-                const item = document.createElement('div');
-                item.className = 'playlist-item' + (currentTrack && currentTrack.id === track.id ? ' active' : '');
-                item.innerHTML = `
-                    <div class="item-cover">🎵</div>
-                    <div class="item-info">
-                        <h4>${track.title}</h4>
-                        <p>${track.artist}</p>
+            let html = '';
+            tracks.slice(0, 15).forEach(track => {
+                const isActive = currentTrack && currentTrack.id === track.id;
+                html += `
+                    <div class="playlist-item ${isActive ? 'active' : ''}" onclick="playTrack(${track.id})">
+                        <div class="item-cover">🎵</div>
+                        <div class="item-info">
+                            <h4>${track.title}</h4>
+                            <p>${track.artist}</p>
+                        </div>
+                        <div class="item-duration">${track.duration}</div>
                     </div>
-                    <div class="item-duration">${track.duration}</div>
                 `;
-                item.onclick = () => playTrack(track);
-                container.appendChild(item);
             });
+            
+            container.innerHTML = html || '<div class="empty-message">📋 Плейлист загружается...</div>';
         }
         
         // ========== ИЗБРАННОЕ ==========
@@ -538,33 +614,26 @@
                 return;
             }
             
-            container.innerHTML = '';
-            favorites.forEach((track, index) => {
-                const item = document.createElement('div');
-                item.className = 'playlist-item';
-                item.innerHTML = `
-                    <div class="item-cover">❤️</div>
-                    <div class="item-info">
-                        <h4>${track.title}</h4>
-                        <p>${track.artist}</p>
+            let html = '';
+            favorites.forEach(track => {
+                html += `
+                    <div class="playlist-item" onclick="playTrack(${track.id})">
+                        <div class="item-cover">❤️</div>
+                        <div class="item-info">
+                            <h4>${track.title}</h4>
+                            <p>${track.artist}</p>
+                        </div>
+                        <div class="item-duration" onclick="removeFromFavorites(event, ${track.id})">✖️</div>
                     </div>
-                    <div class="item-duration" onclick="removeFromFavorites(${index}); event.stopPropagation()">✖️</div>
                 `;
-                item.onclick = () => playTrack(track);
-                container.appendChild(item);
             });
+            
+            container.innerHTML = html;
         }
         
-        function addToFavorites(track) {
-            if (!favorites.some(f => f.id === track.id)) {
-                favorites.push(track);
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-                alert('❤️ Добавлено в избранное!');
-            }
-        }
-        
-        function removeFromFavorites(index) {
-            favorites.splice(index, 1);
+        function removeFromFavorites(event, trackId) {
+            event.stopPropagation();
+            favorites = favorites.filter(f => f.id !== trackId);
             localStorage.setItem('favorites', JSON.stringify(favorites));
             showFavorites();
         }
@@ -573,6 +642,7 @@
         function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.playlist').forEach(p => p.style.display = 'none');
+            searchResults.style.display = 'none';
             
             if (tab === 'playlist') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
@@ -588,7 +658,6 @@
         // ========== ПЕРЕМОТКА ==========
         function seekStart(event) {
             isDragging = true;
-            seekMove(event);
         }
         
         function seekMove(event) {
@@ -608,19 +677,20 @@
             pos = Math.max(0, Math.min(1, pos));
             
             document.getElementById('progressBar').style.width = (pos * 100) + '%';
-            
-            if (event.type === 'click') {
-                audio.currentTime = pos * audio.duration;
-                isDragging = false;
-            }
         }
         
         function seekEnd(event) {
-            if (!isDragging) return;
+            if (!isDragging && event.type !== 'click') return;
             if (!audio.duration) return;
             
+            let clientX;
+            if (event.changedTouches) {
+                clientX = event.changedTouches[0].clientX;
+            } else {
+                clientX = event.clientX;
+            }
+            
             const rect = document.querySelector('.progress-container').getBoundingClientRect();
-            let clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
             let pos = (clientX - rect.left) / rect.width;
             pos = Math.max(0, Math.min(1, pos));
             
@@ -629,10 +699,11 @@
         }
         
         function seek(event) {
-            seekMove(event);
+            seekEnd(event);
         }
         
         function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -650,6 +721,11 @@
             document.getElementById('duration').textContent = formatTime(audio.duration);
         };
         
+        audio.onended = function() {
+            nextTrack();
+        };
+        
+        // Запуск
         showPlaylist();
     </script>
 </body>
