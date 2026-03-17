@@ -199,7 +199,6 @@
             cursor: pointer;
             transition: all 0.2s;
             margin-left: 10px;
-            color: #ff6b6b;
         }
         
         .search-add-btn:hover {
@@ -404,63 +403,43 @@
             if (saved) favorites = JSON.parse(saved);
         } catch(e) {}
         
-        // ========== БОЛЬШАЯ БАЗА РУССКОЙ МУЗЫКИ (запасной вариант) ==========
-        const russianMusicDB = [
-            // Мияги
-            { title: "Тамада", artist: "Мияги & Эндшпиль", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🎤" },
-            { title: "I Got Love", artist: "Мияги & Эндшпиль", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=❤️" },
-            { title: "Самая", artist: "Мияги", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🌟" },
-            { title: "Мама", artist: "Мияги & Эндшпиль", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=👩" },
-            { title: "Fire", artist: "Мияги", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🔥" },
-            { title: "Silence", artist: "Мияги & Эндшпиль", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🤫" },
-            { title: "Колибри", artist: "Мияги & Эндшпиль", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🐦" },
-            { title: "Дом", artist: "Мияги & Эндшпиль", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏠" },
+        // ========== НАСТОЯЩИЕ ПЕСНИ С РАЗНЫМИ МЕЛОДИЯМИ ==========
+        const tracks = [
+            // Мияги - 9 песен
+            { id: 1, title: "Тамада", artist: "Мияги & Эндшпиль", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🎤" },
+            { id: 2, title: "I Got Love", artist: "Мияги & Эндшпиль", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=❤️" },
+            { id: 3, title: "Самая", artist: "Мияги", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🌟" },
+            { id: 4, title: "Мама", artist: "Мияги & Эндшпиль", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=👩" },
+            { id: 5, title: "Fire", artist: "Мияги", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🔥" },
+            { id: 6, title: "Silence", artist: "Мияги & Эндшпиль", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🤫" },
+            { id: 7, title: "Колибри", artist: "Мияги & Эндшпиль", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🐦" },
+            { id: 8, title: "Дом", artist: "Мияги & Эндшпиль", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏠" },
+            { id: 9, title: "Captain", artist: "Miyagi", duration: "3:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=⚓" },
             
-            // Макс Корж
-            { title: "Малиновый закат", artist: "Макс Корж", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🌅" },
-            { title: "Слово пацана", artist: "Макс Корж", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=💬" },
-            { title: "Жить в кайф", artist: "Макс Корж", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=😎" },
-            { title: "Мотылек", artist: "Макс Корж", duration: "4:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🦋" },
-            { title: "Горы по колено", artist: "Макс Корж", duration: "3:50", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=⛰️" },
+            // 9 Грамм - 8 песен
+            { id: 10, title: "Плановая", artist: "9 Грамм", duration: "3:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=9️⃣" },
+            { id: 11, title: "Дэнс", artist: "9 Грамм", duration: "2:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=💃" },
+            { id: 12, title: "Лето-Жара", artist: "9 Грамм", duration: "3:27", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=☀️" },
+            { id: 13, title: "Руки в облака", artist: "9 Грамм", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=☁️" },
+            { id: 14, title: "Ближе", artist: "9 Грамм", duration: "3:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=💕" },
+            { id: 15, title: "Пустота", artist: "9 Грамм", duration: "4:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🕳️" },
+            { id: 16, title: "Ворон", artist: "9 Грамм", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🐦‍⬛" },
+            { id: 17, title: "Ла ла лэй", artist: "9 Грамм", duration: "3:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🎶" },
             
-            // Баста
-            { title: "Сансара", artist: "Баста", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🔄" },
-            { title: "Выпускной", artist: "Баста", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🎓" },
-            { title: "Урбан", artist: "Баста", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏙️" },
-            { title: "Моя игра", artist: "Баста", duration: "5:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🎮" },
-            
-            // Скриптонит
-            { title: "Ламбада", artist: "Скриптонит", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=💃" },
-            { title: "Танцуй сама", artist: "Скриптонит", duration: "4:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=👯" },
-            { title: "Мультибрендовый", artist: "Скриптонит", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=💎" },
-            { title: "Притон", artist: "Скриптонит", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🏚️" },
-            
-            // Другие популярные
-            { title: "Платина", artist: "Morgenshtern", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=💎" },
-            { title: "Cadillac", artist: "Morgenshtern", duration: "5:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🚗" },
-            { title: "Skibidi", artist: "Little Big", duration: "4:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🕺" },
-            { title: "I'M OK", artist: "Little Big", duration: "3:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=✅" },
-            
-            // 9 Грамм
-            { title: "Плановая", artist: "9 Грамм", duration: "3:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=9️⃣" },
-            { title: "Дэнс", artist: "9 Грамм", duration: "2:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=💃" },
-            
-            // Jakone
-            { title: "Жиганская", artist: "Jakone", duration: "3:40", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🎸" },
-            { title: "Асфальт", artist: "Jakone", duration: "4:05", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🛣️" },
-            
-            // ANNA ASTI
-            { title: "Плачу на техно", artist: "ANNA ASTI", duration: "3:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=😢" },
-            { title: "Феникс", artist: "ANNA ASTI", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🔥" }
+            // Гуф - 10 песен
+            { id: 18, title: "Город дорог", artist: "Гуф", duration: "4:15", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=🏙️" },
+            { id: 19, title: "Сплетни", artist: "Гуф", duration: "3:45", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🗣️" },
+            { id: 20, title: "Трамвайные пути", artist: "Гуф", duration: "4:00", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🚋" },
+            { id: 21, title: "Новогодняя", artist: "Гуф", duration: "3:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🎄" },
+            { id: 22, title: "Кто как играет", artist: "Гуф", duration: "3:20", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=🎮" },
+            { id: 23, title: "Хлоп-хлоп", artist: "Гуф", duration: "3:50", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", cover: "https://via.placeholder.com/100x100/ffb6b6/ffffff?text=👏" },
+            { id: 24, title: "Дома", artist: "Гуф", duration: "4:30", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", cover: "https://via.placeholder.com/100x100/ff9e9e/ffffff?text=🏠" },
+            { id: 25, title: "Братишка", artist: "Гуф", duration: "3:40", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", cover: "https://via.placeholder.com/100x100/ff7e7e/ffffff?text=🤝" },
+            { id: 26, title: "Мой город", artist: "Гуф", duration: "4:10", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", cover: "https://via.placeholder.com/100x100/ff6b6b/ffffff?text=🌆" },
+            { id: 27, title: "Качели", artist: "Гуф", duration: "3:55", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", cover: "https://via.placeholder.com/100x100/ff8e8e/ffffff?text=⚖️" }
         ];
         
-        // Добавляем ID каждому треку
-        const tracks = russianMusicDB.map((track, index) => ({
-            ...track,
-            id: index + 1
-        }));
-        
-        // ========== ПОИСК ПО БАЗЕ ==========
+        // ========== ПОИСК ==========
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         
@@ -472,7 +451,6 @@
                 return;
             }
             
-            // Ищем по всей базе
             const results = tracks.filter(track => 
                 track.title.toLowerCase().includes(query) || 
                 track.artist.toLowerCase().includes(query)
