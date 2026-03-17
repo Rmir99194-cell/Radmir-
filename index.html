@@ -120,7 +120,78 @@
             box-shadow: 0 5px 20px rgba(255,107,107,0.5);
         }
         
-        /* Вкладки (плейлист / избранное) */
+        /* Поле поиска */
+        .search-container {
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 25px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            border-radius: 15px;
+            margin-top: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .search-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .search-item-info strong {
+            font-size: 16px;
+        }
+        
+        .search-item-info small {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+        }
+        
+        .search-add-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .search-add-btn:hover {
+            background: rgba(255,107,107,0.3);
+        }
+        
+        /* Вкладки */
         .tabs {
             display: flex;
             gap: 20px;
@@ -221,6 +292,12 @@
         .add-btn:active {
             background: rgba(255,255,255,0.2);
         }
+        
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255,255,255,0.5);
+        }
     </style>
 </head>
 <body>
@@ -236,16 +313,16 @@
         
         <!-- Прогресс бар -->
         <div class="progress-container" 
-     onclick="seekUpdate(event)"
-     onmousedown="seekStart(event)"
-     onmousemove="seekUpdate(event)"
-     onmouseup="seekEnd(event)"
-     onmouseleave="seekEnd(event)"
-     ontouchstart="seekStart(event)"
-     ontouchmove="seekUpdate(event)"
-     ontouchend="seekEnd(event)">
-    <div class="progress" id="progressBar"></div>
-</div>
+             onclick="seekUpdate(event)"
+             onmousedown="seekStart(event)"
+             onmousemove="seekUpdate(event)"
+             onmouseup="seekEnd(event)"
+             onmouseleave="seekEnd(event)"
+             ontouchstart="seekStart(event)"
+             ontouchmove="seekUpdate(event)"
+             ontouchend="seekEnd(event)">
+            <div class="progress" id="progressBar"></div>
+        </div>
         <div class="time-info">
             <span id="currentTime">0:00</span>
             <span id="duration">0:00</span>
@@ -258,29 +335,29 @@
             <button class="control-btn" onclick="nextTrack()">⏭</button>
         </div>
         
+        <!-- Поле поиска -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Найти песню или исполнителя...">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
         <!-- Вкладки -->
         <div class="tabs">
             <div class="tab active" onclick="showTab('playlist')">📋 Плейлист</div>
             <div class="tab" onclick="showTab('favorites')">❤️ Избранное</div>
-            <div class="tab" onclick="showTab('new')">🆕 Новые</div>
+            <div class="tab" onclick="showTab('search')">🔍 Поиск</div>
         </div>
         
         <!-- Плейлист -->
-        <div id="playlistView" class="playlist">
-            <!-- Сюда будут добавляться песни -->
-        </div>
+        <div id="playlistView" class="playlist"></div>
         
-        <!-- Избранное (скрыто) -->
+        <!-- Избранное -->
         <div id="favoritesView" class="playlist" style="display: none;">
-            <div class="add-btn" onclick="addCurrentToFavorites()">
-                ➕ Добавить текущий трек в избранное
-            </div>
+            <div class="add-btn" onclick="addCurrentToFavorites()">➕ Добавить текущий трек в избранное</div>
         </div>
         
-        <!-- Новые (скрыто) -->
-        <div id="newView" class="playlist" style="display: none;">
-            <!-- Здесь будут новые треки -->
-        </div>
+        <!-- Поиск (пустой, результаты будут в выпадающем списке) -->
+        <div id="searchView" style="display: none;"></div>
     </div>
     
     <script>
@@ -288,7 +365,7 @@
         const tg = window.Telegram ? Telegram.WebApp : null;
         if (tg) tg.expand();
         
-        // Наша музыка с обложками
+        // Наша музыка
         const tracks = [
             { 
                 title: "Summer Vibes", 
@@ -327,16 +404,145 @@
             }
         ];
         
+        // База данных для поиска
+        const musicDatabase = [
+            { title: "Blinding Lights", artist: "The Weeknd", genre: "Pop" },
+            { title: "Shape of You", artist: "Ed Sheeran", genre: "Pop" },
+            { title: "Dance Monkey", artist: "Tones and I", genre: "Pop" },
+            { title: "Someone Like You", artist: "Adele", genre: "Pop" },
+            { title: "Rolling in the Deep", artist: "Adele", genre: "Pop" },
+            { title: "Bohemian Rhapsody", artist: "Queen", genre: "Rock" },
+            { title: "Sweet Child O' Mine", artist: "Guns N' Roses", genre: "Rock" },
+            { title: "Smells Like Teen Spirit", artist: "Nirvana", genre: "Rock" },
+            { title: "Hotel California", artist: "Eagles", genre: "Rock" },
+            { title: "Stairway to Heaven", artist: "Led Zeppelin", genre: "Rock" },
+            { title: "Despacito", artist: "Luis Fonsi", genre: "Latin" },
+            { title: "Havana", artist: "Camila Cabello", genre: "Pop" },
+            { title: "God's Plan", artist: "Drake", genre: "Hip-Hop" },
+            { title: "Sicko Mode", artist: "Travis Scott", genre: "Hip-Hop" },
+            { title: "Old Town Road", artist: "Lil Nas X", genre: "Country" },
+            { title: "Uptown Funk", artist: "Bruno Mars", genre: "Funk" },
+            { title: "Happy", artist: "Pharrell Williams", genre: "Pop" },
+            { title: "Sorry", artist: "Justin Bieber", genre: "Pop" },
+            { title: "Love Yourself", artist: "Justin Bieber", genre: "Pop" },
+            { title: "Perfect", artist: "Ed Sheeran", genre: "Pop" },
+            { title: "Thinking Out Loud", artist: "Ed Sheeran", genre: "Pop" },
+            { title: "All of Me", artist: "John Legend", genre: "R&B" },
+            { title: "Let Her Go", artist: "Passenger", genre: "Folk" },
+            { title: "Counting Stars", artist: "OneRepublic", genre: "Pop" },
+            { title: "Radioactive", artist: "Imagine Dragons", genre: "Rock" },
+            { title: "Believer", artist: "Imagine Dragons", genre: "Rock" },
+            { title: "Thunder", artist: "Imagine Dragons", genre: "Rock" },
+            { title: "Demons", artist: "Imagine Dragons", genre: "Rock" },
+            { title: "Whatever It Takes", artist: "Imagine Dragons", genre: "Rock" },
+            { title: "Natural", artist: "Imagine Dragons", genre: "Rock" }
+        ];
+        
         let currentTrack = 0;
         let isPlaying = false;
         let audio = new Audio();
         let favorites = [];
+        let isDragging = false;
         
-        // Загружаем избранное из памяти телефона
+        // Загружаем избранное
         try {
             const saved = localStorage.getItem('favorites');
             if (saved) favorites = JSON.parse(saved);
         } catch(e) {}
+        
+        // Поиск
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        function searchMusic(query) {
+            if (!query || query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            query = query.toLowerCase();
+            const results = musicDatabase.filter(item => 
+                item.title.toLowerCase().includes(query) || 
+                item.artist.toLowerCase().includes(query)
+            );
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="empty-message">❌ Ничего не найдено</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            results.slice(0, 10).forEach(item => {
+                html += `
+                    <div class="search-item" onclick="selectSearchResult('${item.title.replace(/'/g, "\\'")}', '${item.artist.replace(/'/g, "\\'")}')">
+                        <div class="search-item-info">
+                            <strong>${item.title}</strong><br>
+                            <small>${item.artist}</small>
+                        </div>
+                        <div class="search-add-btn" onclick="addToFavoritesFromSearch('${item.title.replace(/'/g, "\\'")}', '${item.artist.replace(/'/g, "\\'")}'); event.stopPropagation()">❤️ Добавить</div>
+                    </div>
+                `;
+            });
+            
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+        }
+        
+        function selectSearchResult(title, artist) {
+            let foundIndex = -1;
+            for (let i = 0; i < tracks.length; i++) {
+                if (tracks[i].title.toLowerCase().includes(title.toLowerCase()) || 
+                    tracks[i].artist.toLowerCase().includes(artist.toLowerCase())) {
+                    foundIndex = i;
+                    break;
+                }
+            }
+            
+            if (foundIndex !== -1) {
+                playTrack(foundIndex);
+            } else {
+                alert(`🎵 Сейчас играет: ${title} - ${artist}\n(Демо-версия)`);
+            }
+            
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+        }
+        
+        function addToFavoritesFromSearch(title, artist) {
+            for (let i = 0; i < tracks.length; i++) {
+                if (tracks[i].title.toLowerCase().includes(title.toLowerCase())) {
+                    addToFavorites(i);
+                    searchResults.style.display = 'none';
+                    searchInput.value = '';
+                    return;
+                }
+            }
+            
+            const trackId = tracks.length;
+            tracks.push({
+                title: title,
+                artist: artist,
+                url: tracks[0].url,
+                cover: "https://via.placeholder.com/200x200/ff6b6b/ffffff?text=🎵",
+                duration: "3:00"
+            });
+            
+            addToFavorites(trackId);
+            alert(`❤️ "${title}" добавлено в избранное!`);
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+        }
+        
+        searchInput.addEventListener('input', function(e) {
+            searchMusic(e.target.value);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
         
         // Показать плейлист
         function showPlaylist() {
@@ -362,14 +568,11 @@
         // Показать избранное
         function showFavorites() {
             const container = document.getElementById('favoritesView');
-            // Оставляем кнопку добавления
             container.innerHTML = '<div class="add-btn" onclick="addCurrentToFavorites()">➕ Добавить текущий трек в избранное</div>';
             
             if (favorites.length === 0) {
                 const empty = document.createElement('div');
-                empty.style.textAlign = 'center';
-                empty.style.padding = '30px';
-                empty.style.color = 'rgba(255,255,255,0.5)';
+                empty.className = 'empty-message';
                 empty.innerText = '❤️ Нет избранных треков';
                 container.appendChild(empty);
                 return;
@@ -394,45 +597,31 @@
             });
         }
         
-        // Показать новые (рекомендации)
-        function showNew() {
-            const container = document.getElementById('newView');
-            container.innerHTML = '';
-            
-            // Просто показываем другие треки
-            const newTracks = [...tracks].reverse();
-            newTracks.forEach((track, index) => {
-                const item = document.createElement('div');
-                item.className = 'playlist-item';
-                item.innerHTML = `
-                    <div class="item-cover">🆕</div>
-                    <div class="item-info">
-                        <h4>${track.title}</h4>
-                        <p>${track.artist}</p>
-                    </div>
-                `;
-                item.onclick = () => playTrack(tracks.indexOf(track));
-                container.appendChild(item);
-            });
-        }
-        
         // Переключение вкладок
         function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.playlist').forEach(p => p.style.display = 'none');
+            searchResults.style.display = 'none';
             
             if (tab === 'playlist') {
-                document.querySelector('.tab').classList.add('active');
+                document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('playlistView').style.display = 'flex';
                 showPlaylist();
             } else if (tab === 'favorites') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('favoritesView').style.display = 'flex';
                 showFavorites();
-            } else {
+            } else if (tab === 'search') {
                 document.querySelectorAll('.tab')[2].classList.add('active');
-                document.getElementById('newView').style.display = 'flex';
-                showNew();
+                document.getElementById('playlistView').style.display = 'none';
+                document.getElementById('favoritesView').style.display = 'none';
+                
+                if (searchInput.value.length > 0) {
+                    searchMusic(searchInput.value);
+                } else {
+                    searchResults.innerHTML = '<div class="empty-message">🔍 Введите название песни или исполнителя</div>';
+                    searchResults.style.display = 'block';
+                }
             }
         }
         
@@ -441,7 +630,7 @@
             if (!favorites.includes(trackId)) {
                 favorites.push(trackId);
                 localStorage.setItem('favorites', JSON.stringify(favorites));
-                alert('💌 Добавлено в избранное!');
+                alert('❤️ Добавлено в избранное!');
                 if (document.querySelector('.tab.active').innerText.includes('❤️')) {
                     showFavorites();
                 }
@@ -504,9 +693,58 @@
             playTrack(prev);
         }
         
-        // Прогресс бар
+        // Перемотка
+        function seekStart(event) {
+            isDragging = true;
+            seekUpdate(event);
+        }
+        
+        function seekUpdate(event) {
+            if (!isDragging && event.type !== 'click') return;
+            if (!audio.duration) return;
+            
+            let clientX;
+            if (event.touches) {
+                clientX = event.touches[0].clientX;
+                event.preventDefault();
+            } else {
+                clientX = event.clientX;
+            }
+            
+            const rect = document.querySelector('.progress-container').getBoundingClientRect();
+            let pos = (clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos));
+            
+            document.getElementById('progressBar').style.width = (pos * 100) + '%';
+            
+            if (event.type === 'click' || event.type === 'touchend') {
+                audio.currentTime = pos * audio.duration;
+                isDragging = false;
+            }
+        }
+        
+        function seekEnd(event) {
+            if (!isDragging) return;
+            if (!audio.duration) return;
+            
+            const rect = document.querySelector('.progress-container').getBoundingClientRect();
+            let clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
+            let pos = (clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos));
+            
+            audio.currentTime = pos * audio.duration;
+            isDragging = false;
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // События аудио
         audio.ontimeupdate = function() {
-            if (audio.duration) {
+            if (audio.duration && !isDragging) {
                 const progress = (audio.currentTime / audio.duration) * 100;
                 document.getElementById('progressBar').style.width = progress + '%';
                 document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
@@ -520,68 +758,6 @@
         audio.onended = function() {
             nextTrack();
         };
-        
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-        
-        // Перемотка пальцем (нажал и потащил)
-let isDragging = false;
-
-function seekStart(event) {
-    isDragging = true;
-    seekUpdate(event);
-}
-
-function seekUpdate(event) {
-    if (!isDragging && event.type !== 'click') return;
-    if (!audio.duration) return;
-    
-    // Чтобы работало и с мышкой и с пальцем
-    let clientX;
-    if (event.touches) {
-        clientX = event.touches[0].clientX;
-        event.preventDefault();
-    } else {
-        clientX = event.clientX;
-    }
-    
-    const rect = document.querySelector('.progress-container').getBoundingClientRect();
-    let pos = (clientX - rect.left) / rect.width;
-    
-    // Ограничиваем от 0 до 1
-    pos = Math.max(0, Math.min(1, pos));
-    
-    // Обновляем прогресс бар
-    document.getElementById('progressBar').style.width = (pos * 100) + '%';
-    
-    // Если перетаскивание закончилось - перематываем
-    if (event.type === 'click' || event.type === 'touchend') {
-        audio.currentTime = pos * audio.duration;
-        isDragging = false;
-    }
-}
-
-function seekEnd(event) {
-    if (!isDragging) return;
-    if (!audio.duration) return;
-    
-    const rect = document.querySelector('.progress-container').getBoundingClientRect();
-    let clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
-    let pos = (clientX - rect.left) / rect.width;
-    pos = Math.max(0, Math.min(1, pos));
-    
-    audio.currentTime = pos * audio.duration;
-    isDragging = false;
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
         
         // Запуск
         showPlaylist();
