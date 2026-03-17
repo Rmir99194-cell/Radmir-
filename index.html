@@ -235,9 +235,17 @@
         </div>
         
         <!-- Прогресс бар -->
-        <div class="progress-container" onclick="seek(event)">
-            <div class="progress" id="progressBar"></div>
-        </div>
+        <div class="progress-container" 
+     onclick="seekUpdate(event)"
+     onmousedown="seekStart(event)"
+     onmousemove="seekUpdate(event)"
+     onmouseup="seekEnd(event)"
+     onmouseleave="seekEnd(event)"
+     ontouchstart="seekStart(event)"
+     ontouchmove="seekUpdate(event)"
+     ontouchend="seekEnd(event)">
+    <div class="progress" id="progressBar"></div>
+</div>
         <div class="time-info">
             <span id="currentTime">0:00</span>
             <span id="duration">0:00</span>
@@ -433,7 +441,7 @@
             if (!favorites.includes(trackId)) {
                 favorites.push(trackId);
                 localStorage.setItem('favorites', JSON.stringify(favorites));
-                alert('❤️ Добавлено в избранное!');
+                alert('💌 Добавлено в избранное!');
                 if (document.querySelector('.tab.active').innerText.includes('❤️')) {
                     showFavorites();
                 }
@@ -519,12 +527,61 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
         
-        function seek(event) {
-            if (!audio.duration) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            const pos = (event.clientX - rect.left) / rect.width;
-            audio.currentTime = pos * audio.duration;
-        }
+        // Перемотка пальцем (нажал и потащил)
+let isDragging = false;
+
+function seekStart(event) {
+    isDragging = true;
+    seekUpdate(event);
+}
+
+function seekUpdate(event) {
+    if (!isDragging && event.type !== 'click') return;
+    if (!audio.duration) return;
+    
+    // Чтобы работало и с мышкой и с пальцем
+    let clientX;
+    if (event.touches) {
+        clientX = event.touches[0].clientX;
+        event.preventDefault();
+    } else {
+        clientX = event.clientX;
+    }
+    
+    const rect = document.querySelector('.progress-container').getBoundingClientRect();
+    let pos = (clientX - rect.left) / rect.width;
+    
+    // Ограничиваем от 0 до 1
+    pos = Math.max(0, Math.min(1, pos));
+    
+    // Обновляем прогресс бар
+    document.getElementById('progressBar').style.width = (pos * 100) + '%';
+    
+    // Если перетаскивание закончилось - перематываем
+    if (event.type === 'click' || event.type === 'touchend') {
+        audio.currentTime = pos * audio.duration;
+        isDragging = false;
+    }
+}
+
+function seekEnd(event) {
+    if (!isDragging) return;
+    if (!audio.duration) return;
+    
+    const rect = document.querySelector('.progress-container').getBoundingClientRect();
+    let clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
+    let pos = (clientX - rect.left) / rect.width;
+    pos = Math.max(0, Math.min(1, pos));
+    
+    audio.currentTime = pos * audio.duration;
+    isDragging = false;
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
         
         // Запуск
         showPlaylist();
